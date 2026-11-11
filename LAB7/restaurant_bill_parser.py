@@ -1,27 +1,59 @@
 def clean_dish_name(name):
     """
     Removes the chef's-special markers (*, #, ~) and title-cases the name.
-    Assumes name is a non-empty string.
+    Returns an empty string if name is not a string (e.g. None).
     """
+    if not isinstance(name, str):
+        return ""
     name = name.strip()
     for ch in ['*', '#', '~']:
         name = name.replace(ch, '')
-    return name.title()
+    return name.strip().title()
+
 
 def parse_item_prices(text):
     """
     Parses comma-separated prices into a list of ints.
-    Assumes every price is a whole number.
+    Empty entries, non-numeric entries and negative prices are skipped.
+    Returns an empty list if text is not a string (e.g. None).
     """
-    return [int(price) for price in text.split(',')]
+    if not isinstance(text, str):
+        return []
+    prices = []
+    for part in text.split(','):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            price = int(part)
+        except ValueError:
+            continue
+        if price >= 0:
+            prices.append(price)
+    return prices
+
 
 def split_amount(text):
     """
     Splits 'TOTAL/PEOPLE' into the amount each person pays.
-    Assumes both values are whole numbers and people is not zero.
+    Returns None if the input is not a string, is not in the form
+    'TOTAL/PEOPLE', has non-integer values, a negative total,
+    or fewer than one person (including zero).
     """
-    total, people = text.split('/')
-    return int(total) // int(people)
+    if not isinstance(text, str):
+        return None
+    parts = text.split('/')
+    if len(parts) != 2:
+        return None
+    try:
+        total = int(parts[0].strip())
+        people = int(parts[1].strip())
+    except ValueError:
+        return None
+    if total < 0 or people < 1:
+        return None
+    return total // people
+
 
 def main():
     print("==== Running clean_dish_name ====")
@@ -34,7 +66,12 @@ def main():
 
     print("\n==== Running split_amount ====")
     value = input("Enter the bill and number of people as TOTAL/PEOPLE (e.g. 1200/4): ")
-    print("Each person pays:", split_amount(value))
+    result = split_amount(value)
+    if result is None:
+        print("Invalid input: use TOTAL/PEOPLE with whole numbers and at least 1 person.")
+    else:
+        print("Each person pays:", result)
+
 
 if __name__ == "__main__":
     main()
